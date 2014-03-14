@@ -2,10 +2,14 @@ package main
 
 import (
     "io"
+    "io/ioutil"
 	"net/http"
 	"os"
+    "regexp"
     "strings"
 )
+
+var thumb = regexp.MustCompile("https?://media-cache-[0-9a-z]+.pinimg.com/192x/[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{32}.jpg")
 
 func main() {
 	http.HandleFunc("/", pinfeed)
@@ -32,7 +36,12 @@ func pinfeed(w http.ResponseWriter, r *http.Request) {
         }
     }
     w.WriteHeader(res.StatusCode)
-    io.Copy(w, res.Body)
+    buf, err := replaceAllThumbs(res.Body)
+    if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    w.Write(buf)
 }
 
 func feedURL(username string) string {
@@ -41,4 +50,11 @@ func feedURL(username string) string {
 
 func username(path string) string {
     return strings.SplitN(path, "/", 3)[1]
+}
+
+func replaceAllThumbs(r io.Reader) (buf []byte, err error) {
+    if buf, err = ioutil.ReadAll(r); err != nil {
+        return
+    }
+    return
 }
