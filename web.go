@@ -17,6 +17,20 @@ const (
 var (
 	thumb       = regexp.MustCompile("\\b(https?://[0-9a-z-]+.pinimg.com/)192(x/[/0-9a-f]+.jpg)\\b")
 	replacement = []byte("${1}736${2}")
+	headers     = []string{
+		// Cache control headers
+		"Age",
+		"Cache-Control",
+		"Content-Type",
+		"Date",
+		"Etag",
+		"Last-Modified",
+		"Vary",
+		// Pinterest-specific stuff
+		"Pinterest-Breed",
+		"Pinterest-Generated-By",
+		"Pinterest-Version",
+	}
 )
 
 func main() {
@@ -37,9 +51,9 @@ func pinFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer res.Body.Close()
-	for key, vals := range res.Header {
-		for _, val := range vals {
-			w.Header().Add(key, val)
+	for _, key := range headers {
+		if val := res.Header.Get(key); val != "" {
+			w.Header().Set(key, val)
 		}
 	}
 	w.WriteHeader(res.StatusCode)
