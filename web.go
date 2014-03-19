@@ -9,7 +9,10 @@ import (
 	"strings"
 )
 
-const origin = "https://www.pinterest.com/"
+const (
+	origin  = "https://www.pinterest.com/"
+	repoURL = "https://github.com/attilaolah/"
+)
 
 var (
 	thumb       = regexp.MustCompile("\\b(https?://[0-9a-z-]+.pinimg.com/)192(x/[/0-9a-f]+.jpg)\\b")
@@ -25,8 +28,7 @@ func main() {
 
 func pinFeed(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
-		// TODO: some home page would be nice…
-		w.WriteHeader(http.StatusNoContent)
+		http.Redirect(w, r, repoURL, http.StatusMovedPermanently)
 		return
 	}
 	res, err := http.Get(feedURL(username(r.URL.Path)))
