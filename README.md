@@ -15,6 +15,6 @@ The API is simple:
   as the source.
 * Use `https://pinfeed.herokuapp.com/attilaolah/for-the-home` to get the feed
   for the specific pin board. This will use
-  https://www.pinterest.com/attilaolah/for-the-home.rss` as the source.
+  `https://www.pinterest.com/attilaolah/for-the-home.rss` as the source.
 
 [1]: https://ifttt.com/
