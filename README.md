@@ -1,4 +1,4 @@
-# PinFeed: a Pinterest peed proxy ![Public Domain](https://pypip.in/license/intperm/badge.png)
+# PinFeed: a Pinterest feed proxy ![Public Domain](https://pypip.in/license/intperm/badge.png)
 
 A simple Heroku application that acts as a proxy to Pinterest feeds. It parses
 each item in the feed and updates the embedded image by changing the thumbinail
