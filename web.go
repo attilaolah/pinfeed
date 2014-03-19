@@ -31,7 +31,7 @@ func pinFeed(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, repoURL, http.StatusMovedPermanently)
 		return
 	}
-	res, err := http.Get(feedURL(username(r.URL.Path)))
+	res, err := http.Get(feedURL(r.URL.Path))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -51,12 +51,23 @@ func pinFeed(w http.ResponseWriter, r *http.Request) {
 	w.Write(buf)
 }
 
-func feedURL(username string) string {
-	return origin + "/" + username + "/feed.rss"
+func feedURL(path string) string {
+	username, feed := userAndFeed(path)
+	if feed == "" {
+		feed = "feed"
+	}
+	return origin + "/" + username + "/" + feed + ".rss"
 }
 
-func username(path string) string {
-	return strings.SplitN(path, "/", 3)[1]
+func userAndFeed(path string) (username, feed string) {
+	parts := strings.SplitN(path, "/", 4)
+	if len(parts) > 1 {
+		username = parts[1]
+	}
+	if len(parts) > 2 {
+		feed = parts[2]
+	}
+	return
 }
 
 func replaceThumbs(r io.Reader) (buf []byte, err error) {
