@@ -11,7 +11,7 @@ import (
 
 const (
 	origin  = "https://www.pinterest.com/"
-	repoURL = "https://github.com/attilaolah/"
+	repoURL = "https://github.com/attilaolah/pinfeed"
 )
 
 var (
