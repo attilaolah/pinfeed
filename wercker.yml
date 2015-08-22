@@ -1,0 +1,21 @@
+box: golang
+build:
+  steps:
+    - setup-go-workspace
+
+    - golint
+
+    - script:
+        name: godep
+        code: |
+          go get github.com/tools/godep
+
+    - script:
+        name: go build
+        code: |
+          godep go build github.com/attilaolah/pinfeed
+
+    - script:
+        name: go test
+        code: |
+          godep go test -rate github.com/attilaolah/pinfeed
