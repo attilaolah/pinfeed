@@ -66,6 +66,7 @@ func feedURL(path string) string {
 }
 
 func userAndFeed(path string) (username, feed string) {
+	path = strings.TrimSuffix(path, ".rss")
 	parts := strings.SplitN(path, "/", 4)
 	if len(parts) > 1 {
 		username = parts[1]
