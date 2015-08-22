@@ -33,22 +33,43 @@ var (
 )
 
 func pinFeed(w http.ResponseWriter, r *http.Request) {
+	// Home page:
 	if r.URL.Path == "/" {
 		http.Redirect(w, r, repoURL, http.StatusMovedPermanently)
 		return
 	}
-	res, err := http.Get(feedURL(r.URL.Path))
+
+	// Feed pages:
+	req, err := http.NewRequest(r.Method, feedURL(r.URL.Path), nil)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Pass along HTTP headers to Pinterest:
+	for key, vals := range r.Header {
+		for _, val := range vals {
+			req.Header.Add(key, val)
+		}
+	}
+
+	// Make an HTTP request:
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer res.Body.Close()
+
+	// Copy white-listed headers to the response:
 	for _, key := range headers {
 		if val := res.Header.Get(key); val != "" {
 			w.Header().Set(key, val)
 		}
 	}
 	w.WriteHeader(res.StatusCode)
+
+	// Write modified response:
 	buf, err := replaceThumbs(res.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
