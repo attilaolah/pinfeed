@@ -1,4 +1,4 @@
-# PinFeed: a Pinterest feed proxy
+# PinFeed: a Pinterest feed proxy [![wercker status](https://app.wercker.com/status/936de8db69098d99f2fa909e6c5c38a2/s/master "wercker status")](https://app.wercker.com/project/bykey/936de8db69098d99f2fa909e6c5c38a2)
 
 A simple Heroku application that acts as a proxy to Pinterest feeds. It parses
 each item in the feed and updates the embedded image by changing the thumbinail
