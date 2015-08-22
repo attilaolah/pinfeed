@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", pinFeed)
+	http.HandleFunc("/", compress(pinFeed))
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
 }
