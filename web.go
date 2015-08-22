@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -35,9 +36,7 @@ var (
 
 func main() {
 	http.HandleFunc("/", pinFeed)
-	if err := http.ListenAndServe(":"+os.Getenv("PORT"), nil); err != nil {
-		panic(err)
-	}
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))
 }
 
 func pinFeed(w http.ResponseWriter, r *http.Request) {
