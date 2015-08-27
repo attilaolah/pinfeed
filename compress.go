@@ -9,15 +9,13 @@ import (
 	"sync"
 )
 
-var pools = struct {
-	gzip, deflate sync.Pool
-}{
-	gzip: sync.Pool{
+var pools = map[string]sync.Pool{
+	"gzip": {
 		New: func() interface{} {
 			return gzip.NewWriter(nil)
 		},
 	},
-	deflate: sync.Pool{
+	"deflate": {
 		New: func() interface{} {
 			return zlib.NewWriter(nil)
 		},
@@ -26,7 +24,7 @@ var pools = struct {
 
 type compressor struct {
 	http.ResponseWriter
-	w encoder
+	encoder encoder
 }
 
 type encoder interface {
@@ -42,22 +40,23 @@ func compress(next http.HandlerFunc) http.HandlerFunc {
 
 		for _, enc := range strings.Split(r.Header.Get("Accept-Encoding"), ",") {
 			enc = strings.TrimSpace(enc)
-			if enc != "gzip" && enc != "deflate" {
+
+			pool, ok := pools[enc]
+			if !ok { // no such encoding
 				continue
 			}
+
 			w.Header().Set("Content-Encoding", enc)
-			c := compressor{ResponseWriter: w}
-			switch enc {
-			case "gzip":
-				c.w = pools.gzip.Get().(encoder)
-				defer pools.gzip.Put(c.w)
-			case "deflate":
-				c.w = pools.deflate.Get().(encoder)
-				defer pools.deflate.Put(c.w)
+
+			zw := pool.Get().(encoder)
+			defer pool.Put(zw)
+			defer zw.Flush()
+			zw.Reset(w)
+
+			w = &compressor{
+				ResponseWriter: w,
+				encoder:        zw,
 			}
-			c.w.Reset(w)
-			defer c.w.Flush()
-			w = c
 			break
 		}
 		next(w, r)
@@ -65,8 +64,8 @@ func compress(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Write calls io.Writer.Write().
-func (c compressor) Write(b []byte) (int, error) {
-	return c.w.Write(b)
+func (c *compressor) Write(b []byte) (int, error) {
+	return c.encoder.Write(b)
 }
 
 func decodeBody(r *http.Response) error {
