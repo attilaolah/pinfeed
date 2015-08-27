@@ -52,6 +52,8 @@ func pinFeed(w http.ResponseWriter, r *http.Request) {
 			req.Header.Add(key, val)
 		}
 	}
+	// Don't pass along the request's Accept-Encoding, enforce gzip or deflate:
+	req.Header.Set("Accept-Encoding", "gzip, deflate")
 
 	// Make an HTTP request:
 	res, err := http.DefaultClient.Do(req)
@@ -60,6 +62,11 @@ func pinFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer res.Body.Close()
+
+	if decodeBody(res) != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	// Copy white-listed headers to the response:
 	for _, key := range headers {

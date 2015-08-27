@@ -16,7 +16,7 @@ type compressor struct {
 	}
 }
 
-// Compress enables gzip and deflate compression for outgoing requests.
+// compress enables gzip and deflate compression for outgoing requests.
 func compress(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", strings.Trim(w.Header().Get("Vary")+",Accept-Encoding", ","))
@@ -45,4 +45,24 @@ func compress(next http.HandlerFunc) http.HandlerFunc {
 // Write calls io.Writer.Write().
 func (c compressor) Write(b []byte) (int, error) {
 	return c.w.Write(b)
+}
+
+func decodeBody(r *http.Response) error {
+	// Decode the response:
+	switch r.Header.Get("Content-Encoding") {
+	case "gzip":
+		body, err := gzip.NewReader(r.Body)
+		if err != nil {
+			return err
+		}
+		r.Body = body
+	case "deflate":
+		body, err := zlib.NewReader(r.Body)
+		if err != nil {
+			return err
+		}
+		r.Body = body
+	}
+
+	return nil
 }
