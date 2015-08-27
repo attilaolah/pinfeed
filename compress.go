@@ -6,14 +6,33 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 )
+
+var pools = struct {
+	gzip, deflate sync.Pool
+}{
+	gzip: sync.Pool{
+		New: func() interface{} {
+			return gzip.NewWriter(nil)
+		},
+	},
+	deflate: sync.Pool{
+		New: func() interface{} {
+			return zlib.NewWriter(nil)
+		},
+	},
+}
 
 type compressor struct {
 	http.ResponseWriter
-	w interface {
-		io.Writer
-		io.Closer
-	}
+	w encoder
+}
+
+type encoder interface {
+	io.Writer
+	Reset(io.Writer)
+	Flush() error
 }
 
 // compress enables gzip and deflate compression for outgoing requests.
@@ -30,11 +49,14 @@ func compress(next http.HandlerFunc) http.HandlerFunc {
 			c := compressor{ResponseWriter: w}
 			switch enc {
 			case "gzip":
-				c.w = gzip.NewWriter(w)
+				c.w = pools.gzip.Get().(encoder)
+				defer pools.gzip.Put(c.w)
 			case "deflate":
-				c.w = zlib.NewWriter(w)
+				c.w = pools.deflate.Get().(encoder)
+				defer pools.deflate.Put(c.w)
 			}
-			defer c.w.Close()
+			c.w.Reset(w)
+			defer c.w.Flush()
 			w = c
 			break
 		}
